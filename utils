@@ -1,0 +1,86 @@
+### git #####
+
+syncfork(){
+	git fetch upstream
+	git checkout main
+	git merge upstream/main
+}
+
+alias gs="git status"
+alias gd="git diff"
+alias gl="git log --oneline --decorate --color"
+
+stash(){
+    git stash -u
+}
+
+### nav ###
+alias cd..='cd ..'
+alias ..='cd ..'
+alias l='ls -la'
+
+### dev ###
+cleanupIdea(){
+    rm -r .idea
+}
+
+cleanupDir(){
+    rm -r $1
+}
+
+decode(){
+    echo "$1" | base64 -d
+}
+
+encode(){
+    echo "$1" | base64
+}
+
+#########       K8s     ########
+export f="—force"
+export now="—force —grace-period 0"
+export do="--dry-run=client -o yaml"
+export d="--dry-run=client"
+export oy="-o yaml"
+
+alias t=tanzu
+alias k=kubectl
+alias kn="kubectl config set-context --current --namespace "
+
+source <(kubectl completion bash)
+complete -o default -F __start_kubectl k
+
+ns() {
+    namespace=$1
+    if [ -z $namespace ]; then
+        echo "Please provide the namespace name: 'ns tanzu'"
+        return 1
+    fi
+
+    kubectl config set-context $(kubectl config current-context) --namespace $namespace
+}
+
+getEvents(){
+    k get events --sort-by=".lastTimestamp" -n $1
+}
+
+mergeConfigs(){
+    # https://support.tools/post/merge_kubeconfig_files
+    cp ~/.kube/config ~/.kube/config_bk && KUBECONFIG=~/.kube/config:$1 kubectl config view --flatten > ~/.kube/config_tmp && mv ~/.kube/config_tmp ~/.kube/config
+}
+
+findYttTemplate(){
+    image_url=$(kubectl -n tanzu-package-repo-global get packages $1 -o jsonpath='{.spec.template.spec.fetch[0].imgpkgBundle.image}')
+    imgpkg pull -b $image_url -o /tmp/$1
+    cp /tmp/$1/config/values.yaml $1-data-values.yaml
+}
+
+### tap ###
+
+kicktap(){
+    kctrl app kick -a tap -n tap-install
+}
+
+ktree(){
+    k tree -n $1 workload $2
+}
