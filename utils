@@ -60,10 +60,6 @@ ns() {
     kubectl config set-context $(kubectl config current-context) --namespace $namespace
 }
 
-getEvents(){
-    k get events --sort-by=".lastTimestamp" -n $1
-}
-
 mergeConfigs(){
     # https://support.tools/post/merge_kubeconfig_files
     cp ~/.kube/config ~/.kube/config_bk && KUBECONFIG=~/.kube/config:$1 kubectl config view --flatten > ~/.kube/config_tmp && mv ~/.kube/config_tmp ~/.kube/config
@@ -73,6 +69,40 @@ findYttTemplate(){
     image_url=$(kubectl -n tanzu-package-repo-global get packages $1 -o jsonpath='{.spec.template.spec.fetch[0].imgpkgBundle.image}')
     imgpkg pull -b $image_url -o /tmp/$1
     cp /tmp/$1/config/values.yaml $1-data-values.yaml
+}
+
+kexec(){
+    kubectl exec $1 --it -- sh
+}
+
+events(){
+   kubectl get events --sort-by=".lastTimestamp" $1
+}
+
+po(){
+    kubectl get po -owide $1
+}
+
+dp(){
+    for pod in $(kubectl get po | grep -v NAME | cut -f1 -d ' ' | grep $1); do kubectl delete pod/$pod --force; done
+}
+
+ep(){
+    for pod in $(kubectl get po | grep -v NAME | cut -f1 -d ' ' | grep $1); do echo $pod; done
+}
+
+deleteAllPods(){
+    for pod in $(kubectl get po | grep -v NAME | cut -f1 -d ' '); do kubectl delete pod/$pod --force; done
+}
+
+deleteEvicted(){
+    for pod in $(kubectl get po $1 | grep -v NAME | grep Evicted | cut -f1 -d ' '); do kubectl delete pod/$pod --force; done
+}
+
+deleteAllEvicted(){
+    for namespace in $(kubectl get namespace -o json |  jq -r '.items[] .metadata.name') ; do
+        deleteEvicted $namespace
+    done
 }
 
 ### tap ###
