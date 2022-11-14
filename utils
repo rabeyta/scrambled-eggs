@@ -33,7 +33,7 @@ decode(){
 }
 
 encode(){
-    echo "$1" | base64
+    echo -n "$1" | base64
 }
 
 #########       K8s     ########
@@ -72,7 +72,14 @@ findYttTemplate(){
 }
 
 kexec(){
-    kubectl exec $1 --it -- sh
+    kubectl exec $1 -it -- sh
+}
+
+deleteTerminatingForeverNamespace(){
+    NAMESPACE_TO_DELETE=$1
+    kubectl get namespace "$NAMESPACE_TO_DELETE" -o json \
+    | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" \
+    | kubectl replace --raw /api/v1/namespaces/${NAMESPACE_TO_DELETE}/finalize -f -
 }
 
 events(){
@@ -103,6 +110,10 @@ deleteAllEvicted(){
     for namespace in $(kubectl get namespace -o json |  jq -r '.items[] .metadata.name') ; do
         deleteEvicted $namespace
     done
+}
+
+nodes(){
+    kubectl get nodes -owide
 }
 
 ### tap ###
