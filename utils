@@ -14,6 +14,9 @@ stash(){
     git stash -u
 }
 
+# need this to allow git signing to work
+export GPG_TTY=$(tty)
+
 ### nav ###
 alias cd..='cd ..'
 alias ..='cd ..'
