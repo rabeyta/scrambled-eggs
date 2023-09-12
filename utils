@@ -53,6 +53,10 @@ alias kn="kubectl config set-context --current --namespace "
 source <(kubectl completion bash)
 complete -o default -F __start_kubectl k
 
+use(){
+    kubectl config use-context $1
+}
+
 ns() {
     namespace=$1
     if [ -z $namespace ]; then
@@ -121,10 +125,68 @@ nodes(){
 
 ### tap ###
 
+kick(){
+    echo "y" | kctrl app kick -a $1 -n tap-install
+}
+
+kicknsp(){
+    kick namespace-provisioner || true
+    echo "y" | kctrl app kick -a provisioner -n tap-namespace-provisioning
+}
+
+gettapvalues(){
+    kubectl get secrets tap-install-values  -oyaml -n tap-install -o jsonpath='{.data.tap-values\.yml}' | base64 -d
+}
+
 kicktap(){
     echo "y" | kctrl app kick -a tap -n tap-install
 }
 
 ktree(){
     k tree -n $1 workload $2
+}
+
+dw(){
+    local current="$(kubectl config current-context)"
+    local currentNamespace="$(kubectl config get-contexts "$current" | awk "/$current/ {print \$5}")"
+    tanzu apps workload delete -f config/workload.yaml --namespace $currentNamespace --yes
+}
+
+aw(){
+    local current="$(kubectl config current-context)"
+    local currentNamespace="$(kubectl config get-contexts "$current" | awk "/$current/ {print \$5}")"
+    tanzu apps workload apply -f config/workload.yaml --namespace $currentNamespace --yes
+}
+
+getwl(){
+    kubectl get workload,gitrepository,pipelinerun,images.kpack,podintent,app
+}
+
+pause(){
+    kubectl patch packageinstall -n tap-install $1 -p '{"spec": {"paused": true}}' --type=merge
+}
+
+pausetap(){
+    kubectl patch packageinstall -n tap-install tap -p '{"spec": {"paused": true}}' --type=merge
+}
+
+unpausetap(){
+    kubectl patch packageinstall -n tap-install tap -p '{"spec": {"paused": false}}' --type=merge
+}
+
+essync(){
+    tanzu es secrets sync $1
+}
+
+synctapvalues(){
+    essync "tap-install-values -n tap-install"
+}
+
+### aks ###
+aksstart(){
+    az aks start --name $1 --resource-group $2
+}
+
+aksstop(){
+    az aks stop --name $1 --resource-group $2
 }
