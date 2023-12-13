@@ -123,6 +123,14 @@ nodes(){
     kubectl get nodes -owide
 }
 
+drain(){
+    kubectl drain $1 --ignore-daemonsets --delete-emptydir-data
+}
+
+uncordon(){
+    kubectl uncordon $1
+}
+
 ### tap ###
 
 kick(){
@@ -166,6 +174,10 @@ pause(){
     kubectl patch packageinstall -n tap-install $1 -p '{"spec": {"paused": true}}' --type=merge
 }
 
+unpause(){
+    kubectl patch packageinstall -n tap-install $1 -p '{"spec": {"paused": false}}' --type=merge
+}
+
 pausetap(){
     kubectl patch packageinstall -n tap-install tap -p '{"spec": {"paused": true}}' --type=merge
 }
@@ -180,6 +192,10 @@ essync(){
 
 synctapvalues(){
     essync "tap-install-values -n tap-install"
+}
+
+schema(){
+    kubectl get pkgi -n tap-install | grep $1 | awk '{print $2"/"$3}' | xargs -I {} tanzu package available get {} --values-schema --namespace tap-install
 }
 
 ### aks ###
