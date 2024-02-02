@@ -110,7 +110,7 @@ deleteAllPods(){
 }
 
 deleteEvicted(){
-    for pod in $(kubectl get po $1 | grep -v NAME | grep Evicted | cut -f1 -d ' '); do kubectl delete pod/$pod --force; done
+    for pod in $(kubectl get po -n $1 | grep -v NAME | grep Evicted | cut -f1 -d ' '); do kubectl delete pod/$pod --force; done
 }
 
 deleteAllEvicted(){
