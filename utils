@@ -137,6 +137,10 @@ kick(){
     echo "y" | kctrl app kick -a $1 -n tap-install
 }
 
+ksync(){
+    echo "y" | kctrl app kick -a $1 -n tanzu-sync
+}
+
 kicknsp(){
     kick namespace-provisioner || true
     echo "y" | kctrl app kick -a provisioner -n tap-namespace-provisioning
