@@ -154,6 +154,10 @@ kicktap(){
     echo "y" | kctrl app kick -a tap -n tap-install
 }
 
+kickkpack(){
+    kubectl -n kpack rollout restart deployment/kpack-controller
+}
+
 ktree(){
     k tree -n $1 workload $2
 }
